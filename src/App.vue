@@ -1,7 +1,7 @@
 <template>
   <Header msg="Grafik sale taneczne"/>
   <button v-on:click="generateList">Generuj</button>
-  <span v-if="seen">Wygenerowano: {{new Date()}}</span>
+  <div v-if="seen">Wygenerowano: {{new Date()}}</div>
   <List v-for="item in list" v-bind:item="item" v-bind:key="item.key" />
 </template>
 
@@ -9,6 +9,7 @@
 import Header from './components/Header.vue'
 import List from './components/List.vue'
 
+const page = "https://api.saletaneczne.pl/inventory"
 export default {
   name: 'App',
   components: {
@@ -22,9 +23,31 @@ export default {
     }
   },
   methods: {
-    generateList: function () {
+    generateList: async function () {
       this.seen = true
-      this.list.push({text: "Test"})
+      this.list = []
+      const date = "24.01.2022"
+      const sh = 18
+
+      await this.generateListForSpecificHour(date, sh)
+      await this.generateListForSpecificHour(date, sh + 1)
+      await this.generateListForSpecificHour(date, sh + 2)
+      await this.generateListForSpecificHour(date, sh + 3)
+    },
+    generateListForSpecificHour: async function(date, sh) {
+      await this.generateListForSpecificHourWithMinutes(date, sh.toString(), "00", (sh + 2).toString(), "00")
+      await this.generateListForSpecificHourWithMinutes(date, sh.toString(), "30", (sh + 2).toString(), "30")
+    },
+    generateListForSpecificHourWithMinutes: function(date, sh, sm, fh, fm) {
+      return new Promise((resolve) => fetch(`${page}?capacity=2&city=Wroc%C5%82aw&date=${date}&from=${sh}%3A${sm}&to=${fh}%3A${fm}&addressActive=true`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.totalCount > 0) {
+            this.list.push({text: `${date} - ${sh}:${sm} - ${fh}:${fm}`})
+          }
+        })
+        .finally(resolve())
+    )
     }
   }
 }
