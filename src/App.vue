@@ -1,6 +1,7 @@
 <template>
   <Header msg="Grafik sale taneczne"/>
   <button v-on:click="generateList">Generuj</button>
+  <span v-if="seen">Wygenerowano: {{new Date()}}</span>
   <List v-for="item in list" v-bind:item="item" v-bind:key="item.key" />
 </template>
 
@@ -16,11 +17,13 @@ export default {
   },
   data: function() {
     return {
+      seen: false,
       list: []
     }
   },
   methods: {
     generateList: function () {
+      this.seen = true
       this.list.push({text: "Test"})
     }
   }
