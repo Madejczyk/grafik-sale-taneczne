@@ -1,5 +1,8 @@
 <template>
   <Header msg="Grafik sale taneczne"/>
+  <div>
+    <input type="text" v-model="date">
+  </div>
   <button v-on:click="generateList">Generuj</button>
   <div v-if="seen">Wygenerowano: {{new Date()}}</div>
   <List v-for="item in list" v-bind:item="item" v-bind:key="item.key" />
@@ -17,7 +20,17 @@ export default {
     List,
   },
   data: function() {
+    const d = new Date()
+    let day = d.getDate();
+    if (day.toString().length === 1) {
+      day = "0" + day
+    }
+    let month = d.getMonth() + 1;
+    if (month.toString().length === 1) {
+      month = "0" + month
+    }
     return {
+      date: `${day}.${month}.${d.getFullYear()}`,
       seen: false,
       list: []
     }
@@ -26,7 +39,7 @@ export default {
     generateList: async function () {
       this.seen = true
       this.list = []
-      const date = "24.01.2022"
+      const date = this.date
       const sh = 18
 
       await this.generateListForSpecificHour(date, sh)
@@ -61,6 +74,14 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+
+input[type=text] {
+  padding: 12px 20px;
+  margin: 8px 0;
+  box-sizing: border-box;
+  border: 2px solid #4C0013;
+  border-radius: 4px;
 }
 button {
   background-color: white;
