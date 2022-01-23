@@ -63,6 +63,13 @@ export default {
       this.list = []
       this.countResponse = 0
     },
+    daysBetween: function(sd, ed) {
+      const diffInTime = ed.getTime() - sd.getTime();
+      return diffInTime / (1000 * 3600 * 24)
+    },
+    calculateMaxResponseByDays: function(days) {
+      return (LAST_HOUR - FIRST_HOUR + 1) * 2 * days
+    },
     generateList: function () {
       this.onBegin()
       let sd = this.selectedDate;
@@ -74,13 +81,16 @@ export default {
       }
       const endRangeExists = ed !== null
       if (endRangeExists) {
-        console.log()
+        this.maxResponse = this.calculateMaxResponseByDays(this.daysBetween(sd, ed) + 1)
+        for(let d = sd; d.getTime() <= ed.getTime(); d.setDate(d.getDate()+1)) {
+          this.generateListForSpecificDay(d)
+        }
       } else {
+        this.maxResponse = this.calculateMaxResponseByDays(1)
         this.generateListForSpecificDay(sd)
       }
     },
     generateListForSpecificDay: function(sd) {
-      this.maxResponse = (LAST_HOUR - FIRST_HOUR + 1) * 2
       for (let i = FIRST_HOUR; i <= LAST_HOUR; i++) {
         this.generateListForSpecificHour(this.getDateFormat(sd), i)
       }
