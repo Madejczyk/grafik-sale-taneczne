@@ -56,18 +56,23 @@ export default {
       }
       return `${day}.${month}.${d.getFullYear()}`
     },
-    generateList: function () {
+    onBegin: function() {
       this.list = []
+      this.countResponse = 0
+    },
+    generateList: function () {
+      this.onBegin()
       let sd = this.selectedDate;
       if (isProxy(this.selectedDate)) {
         sd = toRaw(this.selectedDate)[0]
       }
       const date = this.getDateFormat(sd)
+      this.generateListForSpecificDay(date)
+    },
+    generateListForSpecificDay: function(date) {
       const sh = 18
       const lh = 21
       this.maxResponse = (lh - sh + 1) * 2
-      this.countResponse = 0
-
       for (let i = sh; i <= lh; i++) {
         this.generateListForSpecificHour(date, i)
       }
@@ -79,16 +84,22 @@ export default {
     generateListForSpecificHourWithMinutes: function(date, sh, sm, fh, fm) {
       fetch(`${page}?capacity=2&city=Wroc%C5%82aw&date=${date}&from=${sh}%3A${sm}&to=${fh}%3A${fm}&addressActive=true`)
         .then(response => response.json())
-        .then(data => {
+        .then(info => {
           this.countResponse++
-          if (data.totalCount > 0) {
-            this.list.push({text: `${date} - ${sh}:${sm} - ${fh}:${fm}`})
+          if (info.totalCount > 0) {
+            const price = info.data[0].priceData.price / 100;
+            const text = `${date} - ${sh}:${sm} - ${fh}:${fm} (${price} zł)`
+            this.list.push({text})
           }
+
           if (this.countResponse === this.maxResponse) {
-            this.list.sort((a, b) => (a.text > b.text) ? 1 : -1)
-            this.maxResponse = 0
+            this.onFinish()
           }
         })
+    },
+    onFinish: function() {
+      this.list.sort((a, b) => (a.text > b.text) ? 1 : -1)
+      this.maxResponse = 0
     }
   }
 }
