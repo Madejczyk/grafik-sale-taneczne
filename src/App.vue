@@ -4,11 +4,12 @@
     <input type="text" v-model="date">
   </div>
   <button v-on:click="generateList">Generuj</button>
-  <div v-if="seen">Wygenerowano: {{new Date()}}</div>
+  <div class="loading" v-if="isLoading()"><rotate-square2></rotate-square2></div>
   <List v-for="item in list" v-bind:item="item" v-bind:key="item.key" />
 </template>
 
 <script>
+import {RotateSquare2} from 'vue-loading-spinner'
 import Header from './components/Header.vue'
 import List from './components/List.vue'
 
@@ -16,6 +17,7 @@ const page = "https://api.saletaneczne.pl/inventory"
 export default {
   name: 'App',
   components: {
+    RotateSquare2,
     Header,
     List,
   },
@@ -31,36 +33,45 @@ export default {
     }
     return {
       date: `${day}.${month}.${d.getFullYear()}`,
-      seen: false,
-      list: []
+      end: false,
+      list: [],
+      maxResponse: 0,
+      countResponse: 0
     }
   },
   methods: {
-    generateList: async function () {
-      this.seen = true
+    isLoading: function () {
+      return this.maxResponse > 0
+    },
+    generateList: function () {
       this.list = []
       const date = this.date
       const sh = 18
+      const lh = 21
+      this.maxResponse = (lh - sh + 1) * 2
+      this.countResponse = 0
 
-      await this.generateListForSpecificHour(date, sh)
-      await this.generateListForSpecificHour(date, sh + 1)
-      await this.generateListForSpecificHour(date, sh + 2)
-      await this.generateListForSpecificHour(date, sh + 3)
+      for (let i = sh; i <= lh; i++) {
+        this.generateListForSpecificHour(date, i)
+      }
     },
-    generateListForSpecificHour: async function(date, sh) {
-      await this.generateListForSpecificHourWithMinutes(date, sh.toString(), "00", (sh + 2).toString(), "00")
-      await this.generateListForSpecificHourWithMinutes(date, sh.toString(), "30", (sh + 2).toString(), "30")
+    generateListForSpecificHour: function(date, sh) {
+      this.generateListForSpecificHourWithMinutes(date, sh.toString(), "00", (sh + 2).toString(), "00")
+      this.generateListForSpecificHourWithMinutes(date, sh.toString(), "30", (sh + 2).toString(), "30")
     },
     generateListForSpecificHourWithMinutes: function(date, sh, sm, fh, fm) {
-      return new Promise((resolve) => fetch(`${page}?capacity=2&city=Wroc%C5%82aw&date=${date}&from=${sh}%3A${sm}&to=${fh}%3A${fm}&addressActive=true`)
+      fetch(`${page}?capacity=2&city=Wroc%C5%82aw&date=${date}&from=${sh}%3A${sm}&to=${fh}%3A${fm}&addressActive=true`)
         .then(response => response.json())
         .then(data => {
+          this.countResponse++
           if (data.totalCount > 0) {
             this.list.push({text: `${date} - ${sh}:${sm} - ${fh}:${fm}`})
           }
+          if (this.countResponse === this.maxResponse) {
+            this.list.sort((a, b) => (a.text > b.text) ? 1 : -1)
+            this.maxResponse = 0
+          }
         })
-        .finally(resolve())
-    )
     }
   }
 }
@@ -98,5 +109,10 @@ button {
 button:hover {
   background-color: #4C0013;
   color: white;
+}
+.loading {
+  display: flex;
+  justify-content: center;
+  align-content: center;
 }
 </style>
