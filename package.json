@@ -13,7 +13,8 @@
     "express": "^4.17.2",
     "serve-static": "^1.14.2",
     "vue": "^3.0.0",
-    "vue-loading-spinner": "^1.0.11"
+    "vue-loading-spinner": "^1.0.11",
+    "vue3-datepicker": "^0.3.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",

@@ -1,8 +1,8 @@
 <template>
   <Header msg="Grafik sale taneczne"/>
   <div>
-    <input type="text" v-model="date">
-  </div>
+    <datepicker v-model="selectedDate" inputFormat="dd.MM.yyyy" typeable />
+  </div>  
   <button v-on:click="generateList">Generuj</button>
   <div class="loading" v-if="isLoading()"><rotate-square2></rotate-square2></div>
   <List v-for="item in list" v-bind:item="item" v-bind:key="item.key" />
@@ -10,6 +10,7 @@
 
 <script>
 import {RotateSquare2} from 'vue-loading-spinner'
+import Datepicker from 'vue3-datepicker'
 import Header from './components/Header.vue'
 import List from './components/List.vue'
 
@@ -18,34 +19,37 @@ export default {
   name: 'App',
   components: {
     RotateSquare2,
+    Datepicker,
     Header,
     List,
   },
   data: function() {
-    const d = new Date()
-    let day = d.getDate();
-    if (day.toString().length === 1) {
-      day = "0" + day
-    }
-    let month = d.getMonth() + 1;
-    if (month.toString().length === 1) {
-      month = "0" + month
-    }
     return {
-      date: `${day}.${month}.${d.getFullYear()}`,
+      selectedDate: new Date(),
       end: false,
       list: [],
       maxResponse: 0,
-      countResponse: 0
+      countResponse: 0,
     }
   },
   methods: {
     isLoading: function () {
       return this.maxResponse > 0
     },
+    getDateFormat: function () {
+      let day = this.selectedDate.getDate();
+      if (day.toString().length === 1) {
+        day = "0" + day
+      }
+      let month = this.selectedDate.getMonth() + 1;
+      if (month.toString().length === 1) {
+        month = "0" + month
+      }
+      return `${day}.${month}.${this.selectedDate.getFullYear()}`
+    },
     generateList: function () {
       this.list = []
-      const date = this.date
+      const date = this.getDateFormat()
       const sh = 18
       const lh = 21
       this.maxResponse = (lh - sh + 1) * 2
@@ -84,7 +88,7 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  margin-top: 30px;
 }
 
 input[type=text] {
