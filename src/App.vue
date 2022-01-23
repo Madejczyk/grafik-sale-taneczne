@@ -1,7 +1,7 @@
 <template>
   <Header msg="Grafik sale taneczne"/>
   <div>
-    <datepicker v-model="selectedDate" range :enableTimePicker="false" locale="pl" :format="format" placeholder="Domyślnie dziś" />
+    <datepicker v-model="selectedDate" range :enableTimePicker="false" locale="pl" :format="inputFormat" placeholder="Domyślnie dziś" />
   </div>  
   <button v-on:click="generateList">Generuj</button>
   <div class="loading" v-if="isLoading()"><rotate-square2></rotate-square2></div>
@@ -16,7 +16,10 @@ import 'vue3-date-time-picker/dist/main.css'
 import Header from './components/Header.vue'
 import List from './components/List.vue'
 
-const page = "https://api.saletaneczne.pl/inventory"
+const PAGE = "https://api.saletaneczne.pl/inventory"
+const FIRST_HOUR = 18
+const LAST_HOUR = 21
+
 export default {
   name: 'App',
   components: {
@@ -35,7 +38,7 @@ export default {
     }
   },
   methods: {
-    format: function (dateProxy) {
+    inputFormat: function (dateProxy) {
       const date = toRaw(dateProxy)
       if (date[1] === null) {
         return this.getDateFormat(date[0]);
@@ -63,18 +66,23 @@ export default {
     generateList: function () {
       this.onBegin()
       let sd = this.selectedDate;
+      let ed = null
       if (isProxy(this.selectedDate)) {
-        sd = toRaw(this.selectedDate)[0]
+        const dateObj = toRaw(this.selectedDate)
+        sd = dateObj[0]
+        ed = dateObj[1]
       }
-      const date = this.getDateFormat(sd)
-      this.generateListForSpecificDay(date)
+      const endRangeExists = ed !== null
+      if (endRangeExists) {
+        console.log()
+      } else {
+        this.generateListForSpecificDay(sd)
+      }
     },
-    generateListForSpecificDay: function(date) {
-      const sh = 18
-      const lh = 21
-      this.maxResponse = (lh - sh + 1) * 2
-      for (let i = sh; i <= lh; i++) {
-        this.generateListForSpecificHour(date, i)
+    generateListForSpecificDay: function(sd) {
+      this.maxResponse = (LAST_HOUR - FIRST_HOUR + 1) * 2
+      for (let i = FIRST_HOUR; i <= LAST_HOUR; i++) {
+        this.generateListForSpecificHour(this.getDateFormat(sd), i)
       }
     },
     generateListForSpecificHour: function(date, sh) {
@@ -82,7 +90,7 @@ export default {
       this.generateListForSpecificHourWithMinutes(date, sh.toString(), "30", (sh + 2).toString(), "30")
     },
     generateListForSpecificHourWithMinutes: function(date, sh, sm, fh, fm) {
-      fetch(`${page}?capacity=2&city=Wroc%C5%82aw&date=${date}&from=${sh}%3A${sm}&to=${fh}%3A${fm}&addressActive=true`)
+      fetch(`${PAGE}?capacity=2&city=Wroc%C5%82aw&date=${date}&from=${sh}%3A${sm}&to=${fh}%3A${fm}&addressActive=true`)
         .then(response => response.json())
         .then(info => {
           this.countResponse++
@@ -92,10 +100,13 @@ export default {
             this.list.push({text})
           }
 
-          if (this.countResponse === this.maxResponse) {
+          if (this.isFinish()) {
             this.onFinish()
           }
         })
+    },
+    isFinish: function() {
+      return this.countResponse === this.maxResponse
     },
     onFinish: function() {
       this.list.sort((a, b) => (a.text > b.text) ? 1 : -1)
@@ -115,12 +126,8 @@ export default {
   margin-top: 30px;
 }
 
-input[type=text] {
-  padding: 12px 20px;
-  margin: 8px 0;
-  box-sizing: border-box;
+.dp__input {
   border: 2px solid #4179E0;
-  border-radius: 4px;
 }
 button {
   background-color: white;
@@ -133,6 +140,7 @@ button {
   font-size: 16px;
   transition-duration: 0.4s;
   border-radius: 4px;
+  margin: 1em
 }
 button:hover {
   background-color: #4179E0;
