@@ -1,7 +1,7 @@
 <template>
   <Header msg="Grafik sale taneczne"/>
   <div>
-    <datepicker v-model="selectedDate" inputFormat="dd.MM.yyyy" typeable />
+    <datepicker v-model="selectedDate" range :enableTimePicker="false" locale="pl" :format="format" placeholder="Domyślnie dziś" />
   </div>  
   <button v-on:click="generateList">Generuj</button>
   <div class="loading" v-if="isLoading()"><rotate-square2></rotate-square2></div>
@@ -9,8 +9,10 @@
 </template>
 
 <script>
+import { isProxy, toRaw } from 'vue';
 import {RotateSquare2} from 'vue-loading-spinner'
-import Datepicker from 'vue3-datepicker'
+import Datepicker from 'vue3-date-time-picker';
+import 'vue3-date-time-picker/dist/main.css'
 import Header from './components/Header.vue'
 import List from './components/List.vue'
 
@@ -33,23 +35,34 @@ export default {
     }
   },
   methods: {
+    format: function (dateProxy) {
+      const date = toRaw(dateProxy)
+      if (date[1] === null) {
+        return this.getDateFormat(date[0]);
+      }
+      return `${this.getDateFormat(date[0])} - ${this.getDateFormat(date[1])}`;
+    },
     isLoading: function () {
       return this.maxResponse > 0
     },
-    getDateFormat: function () {
-      let day = this.selectedDate.getDate();
+    getDateFormat: function (d) {
+      let day = d.getDate();
       if (day.toString().length === 1) {
         day = "0" + day
       }
-      let month = this.selectedDate.getMonth() + 1;
+      let month = d.getMonth() + 1;
       if (month.toString().length === 1) {
         month = "0" + month
       }
-      return `${day}.${month}.${this.selectedDate.getFullYear()}`
+      return `${day}.${month}.${d.getFullYear()}`
     },
     generateList: function () {
       this.list = []
-      const date = this.getDateFormat()
+      let sd = this.selectedDate;
+      if (isProxy(this.selectedDate)) {
+        sd = toRaw(this.selectedDate)[0]
+      }
+      const date = this.getDateFormat(sd)
       const sh = 18
       const lh = 21
       this.maxResponse = (lh - sh + 1) * 2
