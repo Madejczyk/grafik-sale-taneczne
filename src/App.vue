@@ -91,13 +91,13 @@ input[type=text] {
   padding: 12px 20px;
   margin: 8px 0;
   box-sizing: border-box;
-  border: 2px solid #4C0013;
+  border: 2px solid #4179E0;
   border-radius: 4px;
 }
 button {
   background-color: white;
   color: black;
-  border: 2px solid #4C0013;
+  border: 2px solid #4179E0;
   padding: 15px 32px;
   text-align: center;
   text-decoration: none;
@@ -107,12 +107,15 @@ button {
   border-radius: 4px;
 }
 button:hover {
-  background-color: #4C0013;
+  background-color: #4179E0;
   color: white;
 }
 .loading {
   display: flex;
   justify-content: center;
   align-content: center;
+}
+.spinner::after {
+  background: #d7bdff !important
 }
 </style>
